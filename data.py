@@ -14,13 +14,13 @@ class PinnDataset(Dataset):
         self.data = data
         self.examples = torch.tensor(
             data, dtype=torch.float32, requires_grad=True
-        )
+        )   
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        headers = ["t", "x", "y", "p", "u", "v"]
+        headers = ["t", "x", "y", "z", "p", "u", "v", "w"]
         return {key: self.examples[idx, i] for i, key in enumerate(headers)}
 
 
@@ -37,7 +37,7 @@ def dump_json(path, data):
 
 
 def get_dataset(data_path: Path):
-    data = load_jsonl(data_path, skip_first_lines=1)
+    data = load_jsonl(data_path)
     random.shuffle(data)
 
     # It's weird that the test data is a subset of train data, but

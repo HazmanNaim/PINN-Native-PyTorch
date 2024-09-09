@@ -125,8 +125,10 @@ class Trainer:
                             "lambda2": round(self.model.lambda2.item(), 4),
                             "u_loss": round(losses["u_loss"].item(), 6),
                             "v_loss": round(losses["v_loss"].item(), 6),
+                            "w_loss": round(losses["w_loss"].item(), 6),
                             "f_u_loss": round(losses["f_u_loss"].item(), 6),
                             "f_v_loss": round(losses["f_v_loss"].item(), 6),
+                            "f_w_loss": round(losses["f_w_loss"].item(), 6),
                             "time": round(time() - train_start_time, 1),
                         }
                     )
