@@ -10,11 +10,15 @@ from torch.utils.data import Dataset
 
 
 class PinnDataset(Dataset):
-    def __init__(self, data: List[List[float]]):
+    def __init__(self, data: List[dict]):
         self.data = data
+        
+        # Extract the numerical data from the dictionaries
         self.examples = torch.tensor(
-            data, dtype=torch.float32, requires_grad=True
-        )   
+            [[d["t"], d["x"], d["y"], d["z"], d["p"], d["u"], d["v"], d["w"]] for d in data],
+            dtype=torch.float32,
+            requires_grad=True
+        )
 
     def __len__(self):
         return len(self.data)
@@ -38,19 +42,19 @@ def dump_json(path, data):
 
 def get_dataset(data_path: Path):
     data = load_jsonl(data_path)
-    random.shuffle(data)
+    
+    # Load only 0.1% of the data
+    small_data_size = int(len(data) * 0.001)
+    data = random.sample(data, small_data_size)  # Randomly sample 0.1% of the data
 
-    # It's weird that the test data is a subset of train data, but
-    # that's what the original paper does.
+    random.shuffle(data)  # Shuffle the data after sampling
+
     split_idx = int(len(data) * 0.9)
     train_data = data
     test_data = data[split_idx:]
 
-    # train_data = train_data[:10000]
-    # train_data = train_data[:1000]
-
-    min_x = min([d[1] for d in train_data])
-    max_x = max([d[1] for d in train_data])
+    min_x = min([d['x'] for d in train_data])
+    max_x = max([d['x'] for d in train_data])
 
     train_data = PinnDataset(train_data)
     test_data = PinnDataset(test_data)

@@ -6,6 +6,7 @@ from torch.utils.data import RandomSampler, DataLoader
 
 from model import Pinn
 from data import dump_json, PinnDataset
+from tqdm import tqdm 
 
 
 class Trainer:
@@ -83,6 +84,7 @@ class Trainer:
         print(f"# samples used per epoch: {self.samples_per_ep}")
         print(f"batch size: {self.batch_size}")
         print(f"# steps: {len(train_loader)}")
+
         self.loss_history = []
         model.train()
         model.to(device)
@@ -99,7 +101,11 @@ class Trainer:
         train_start_time = time()
         while ep < self.num_epochs:
             print(f"====== Epoch {ep} ======")
-            for step, batch in enumerate(train_loader):
+
+            # Initialize tqdm for epoch
+            epoch_progress = tqdm(train_loader, desc=f"Epoch {ep}", dynamic_ncols=True)
+
+            for step, batch in enumerate(epoch_progress):
                 inputs = {k: t.to(device) for k, t in batch.items()}
 
                 # Forward
@@ -112,30 +118,30 @@ class Trainer:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
+                # Update tqdm description with current step info
                 if step % self.log_interval == 0:
                     losses = outputs["losses"]
-                    print(
-                        {
-                            "step": step,
-                            "loss": round(loss.item(), 6),
-                            "lr": round(
-                                self.optimizer.param_groups[0]["lr"], 4
-                            ),
-                            "lambda1": round(self.model.lambda1.item(), 4),
-                            "lambda2": round(self.model.lambda2.item(), 4),
-                            "u_loss": round(losses["u_loss"].item(), 6),
-                            "v_loss": round(losses["v_loss"].item(), 6),
-                            "w_loss": round(losses["w_loss"].item(), 6),
-                            "f_u_loss": round(losses["f_u_loss"].item(), 6),
-                            "f_v_loss": round(losses["f_v_loss"].item(), 6),
-                            "f_w_loss": round(losses["f_w_loss"].item(), 6),
-                            "time": round(time() - train_start_time, 1),
-                        }
+                    epoch_progress.set_postfix(
+                        loss=round(loss.item(), 6),
+                        lr=round(self.optimizer.param_groups[0]["lr"], 4),
+                        lambda1=round(self.model.lambda1.item(), 4),
+                        lambda2=round(self.model.lambda2.item(), 4),
+                        u_loss=round(losses["u_loss"].item(), 6),
+                        v_loss=round(losses["v_loss"].item(), 6),
+                        w_loss=round(losses["w_loss"].item(), 6),
+                        f_u_loss=round(losses["f_u_loss"].item(), 6),
+                        f_v_loss=round(losses["f_v_loss"].item(), 6),
+                        f_w_loss=round(losses["f_w_loss"].item(), 6)
                     )
+
             self.lr_scheduler.step()
             self.checkpoint(ep)
-            print(f"====== Epoch {ep} done ======")
+
+            # Print epoch summary
+            epoch_duration = round(time() - train_start_time, 1)
+            print(f"====== Epoch {ep} done. Duration: {epoch_duration} seconds ======")
             ep += 1
+
         print("====== Training done ======")
 
     def checkpoint(self, ep: int):

@@ -17,10 +17,10 @@ def process_test_result(
 ):
     preds = preds.detach().cpu().numpy()
     test_arr = np.array(test_data.data)
-    p = test_arr[:, 3]
-    u = test_arr[:, 4]
-    v = test_arr[:, 5]
-    w = test_arr[:, 6]  # Added for 3D
+    p = test_arr[:, 4]
+    u = test_arr[:, 5]
+    v = test_arr[:, 6]
+    w = test_arr[:, 7] 
     p_pred = preds[:, 0]
     u_pred = preds[:, 1]
     v_pred = preds[:, 2]
@@ -54,11 +54,11 @@ def main():
     print(f"Using device: {device}")
 
     # Data
-    data_path = Path("data/pinn_data_3d.jsonl")  # Adjusted for 3D
+    data_path = Path("data/pinn_data.jsonl")
     train_data, test_data, min_x, max_x = get_dataset(data_path)
 
     # Model
-    model = Pinn(min_x, max_x, dim=3)  # Adjusted for 3D
+    model = Pinn(min_x, max_x)
     num_params = sum(p.numel() for p in model.parameters())
     print(f"Number of parameters: {num_params}")
 
